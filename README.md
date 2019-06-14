@@ -176,8 +176,10 @@ Promise.prototype.then = function(onResolved,onRejected){
             function handle(callback){
                 //无论进入then方法的第几个回调函数，其执行结果都可能是成功或失败，其成功或者失败的状态取决于其返回值
                 try{
-                    //根据promise中then方法第一个回调函数的特点，
-					//可以通过其形参获取调用resolve()调用时传入的value值，即self.data;
+                    /* 
+                    根据promise中then方法第一个回调函数的特点，
+                    可以通过其形参获取调用resolve()调用时传入的value值，即self.data;
+                    */
                     let result = callback(self.data)
                     //如果当前没有抛出异常也可能有两种情况
                     //1.返回的是promise对象
@@ -185,8 +187,7 @@ Promise.prototype.then = function(onResolved,onRejected){
                         //此处还是不太理解，需要进一步研究
                         result.then(resolve,reject)
                     }else{
-                        //进入else说明此时没有抛出异常，返回的结果也不是promise对象，
-						//所以直接包装成promise成功的状态即可
+                        //进入else说明此时没有抛出异常，返回的结果也不是promise对象，所以之间包装成promise成功的状态即可
                         resolve(result)
                     }
 
@@ -221,8 +222,10 @@ Promise.prototype.then = function(onResolved,onRejected){
                //以上两种状态都不符合时，说明当前无状态，即可以往上面的callbacks中添加待执行的回调函数了
                 self.callbacks.push(
                     {
-                        //此处onResolve，onReject的调用场景是当调用resolve或reject时，
-						 跟Promise.prototype.then中的形参没有任何关系
+                        /* 
+                        此处onResolve，onReject的调用场景是当调用resolve或reject时，
+                        跟Promise.prototype.then中的形参没有任何关系
+                        */
                         //说白了，此处改成a,b也可以，只要和上面resolve()或reject()方法里的名字保持一致即可
                         onResolved(value){
                             //此处的函数体内容不可省略，如果省略，当调用时，根本不会有执行，因为函数体为空
@@ -242,92 +245,92 @@ Promise.prototype.then = function(onResolved,onRejected){
 
 //catch方法实质上是then方法只执行第二个回调函数，其他内容都一样
 Promise.prototype.catch = function(onRejected){
-    return this.then(undefined,onRejected)
+   return this.then(undefined,onRejected)
 }
 ```
 
 5、定义Promise构造函数上的resolve()和reject()方法
 ```
-	/* 
-    Promise.resolve()方法返回的新的promise状态要根据其传入的参数的类型，或者状态(如果传入的是个promise对象)而定；
-    Promise.reject()方法则无论传入的参数是什么，返回的总是一个失败状态的新的promise对象
-    */
+/* 
+Promise.resolve()方法返回的新的promise状态要根据其传入的参数的类型，或者状态(如果传入的是个promise对象)而定；
+Promise.reject()方法则无论传入的参数是什么，返回的总是一个失败状态的新的promise对象
+*/
 
-    /*
-    返回一个指定了成功value的promise对象
-    value: 一般数据或promise
-   */
+/*
+返回一个指定了成功value的promise对象
+value: 一般数据或promise
+*/
 
-    Promise.resolve = function(value){
-        return new Promise((resolve,reject)=>{
-            if(value instanceof Promise){
-                value.then(resolve,reject)
-            }else{
-                resolve(value)
-            }
-        })
-    }
+Promise.resolve = function(value){
+    return new Promise((resolve,reject)=>{
+        if(value instanceof Promise){
+            value.then(resolve,reject)
+        }else{
+            resolve(value)
+        }
+    })
+}
 
     
-    /*
-    返回一个指定了失败reason的promise对象
-    reason: 一般数据/error
-   */
+/*
+返回一个指定了失败reason的promise对象
+reason: 一般数据/error
+*/
 
-    Promise.reject = function(reason){
-        return new Promise((resolve,reject)=>{
-            reject(reason)
-        })
-    }
+Promise.reject = function(reason){
+    return new Promise((resolve,reject)=>{
+        reject(reason)
+    })
+}
 ```
 
 6.定义Promise构造函数上的all()和race()方法
 ```
-	/* 
-    返回一个新的promise对象，如果数组中所有promise对象都是成功的状态，则新的promise即成功，
-    只要数组中有一个promise返回的是失败的状态，则新的promise即失败
-    */
-    Promise.all = function(promises){
-        return new Promise((resolve,reject)=>{
-            //定义一个累加器，用于判断当前数组中成功状态的promise对象的个数
-            let num = 0
-            //定义一个数组，用于将返回的成功状态的所有value值收集起来返回
-            let values = new Array(promises.length)
-            promises.forEach((item,index) => {
-                //因为其每一项并不一定都是promise对象，而根据promise.all处理非promise对象是将其值直接返回，
-				所以在此可以将其直接包装成promise对象
-                Promise.resolve(item).then(
-                    value => {
-                        num++
-                        values[index] = value
-                        //当所有的promise对象都成功时，改变内部状态为成功的状态
-                        if(num === promises.length){
-                            //将所有成功值的数组作为返回promise对象的成功结果值
-                            resolve(values)
-                        }
-                    },
-                    reason =>{
-                        //一旦有一个promise产生了失败结果值, 将其作为返回promise对象的失败结果值
-                        reject(reason)
+/* 
+返回一个新的promise对象，如果数组中所有promise对象都是成功的状态，则新的promise即成功，
+只要数组中有一个promise返回的是失败的状态，则新的promise即失败
+*/
+Promise.all = function(promises){
+    return new Promise((resolve,reject)=>{
+        //定义一个累加器，用于判断当前数组中成功状态的promise对象的个数
+        let num = 0
+        //定义一个数组，用于将返回的成功状态的所有value值收集起来返回
+        let values = new Array(promises.length)
+        promises.forEach((item,index) => {
+            /* 
+            因为其每一项并不一定都是promise对象，而根据promise.all处理非promise对象是将其值直接返回，             所以在此可以将其直接包装成promise对象
+            */
+            Promise.resolve(item).then(
+                value => {
+                    num++
+                    values[index] = value
+                    //当所有的promise对象都成功时，改变内部状态为成功的状态
+                    if(num === promises.length){
+                        //将所有成功值的数组作为返回promise对象的成功结果值
+                        resolve(values)
                     }
-                )
-            })
+                },
+                reason =>{
+                    //一旦有一个promise产生了失败结果值, 将其作为返回promise对象的失败结果值
+                    reject(reason)
+                }
+            )
         })
+    })
         
-    }
+}
 
-    //返回一个新的promise对象，第一个成功或失败的promise对象的状态和value或reason值
-	即新的promise对象的状态和value或reason值，
-    Promise.race = function(promises){
-        return new Promise((resolve,reject)=>{
-            promises.forEach(item => {
-                Promise.resolve(item).then(
-                    //只要有一个成功了, 返回的promise就成功了
-                    value => resolve(value),
-                    //只要有一个失败了, 返回的结果就失败了
-                    reason => reject(reason)
-                )
-            })
+//返回一个新的promise对象，第一个成功或失败的promise对象的状态和value或reason值即新的promise对象的状态和value或reason值，
+Promise.race = function(promises){
+    return new Promise((resolve,reject)=>{
+        promises.forEach(item => {
+            Promise.resolve(item).then(
+                //只要有一个成功了, 返回的promise就成功了
+                value => resolve(value),
+                //只要有一个失败了, 返回的结果就失败了
+                reason => reject(reason)
+            )
         })
-    }
+    })
+}
 ```
