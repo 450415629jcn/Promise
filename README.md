@@ -298,7 +298,8 @@ Promise.all = function(promises){
         let values = new Array(promises.length)
         promises.forEach((item,index) => {
             /* 
-            因为其每一项并不一定都是promise对象，而根据promise.all处理非promise对象是将其值直接返回，             所以在此可以将其直接包装成promise对象
+            因为其每一项并不一定都是promise对象，而根据promise.all处理非promise对象是将其值直接返回，
+			所以在此可以将其直接包装成promise对象
             */
             Promise.resolve(item).then(
                 value => {
