@@ -176,7 +176,8 @@ Promise.prototype.then = function(onResolved,onRejected){
             function handle(callback){
                 //无论进入then方法的第几个回调函数，其执行结果都可能是成功或失败，其成功或者失败的状态取决于其返回值
                 try{
-                    //根据promise中then方法第一个回调函数的特点，可以通过其形参获取调用resolve()调用时传入的value值，即self.data;
+                    //根据promise中then方法第一个回调函数的特点，
+					//可以通过其形参获取调用resolve()调用时传入的value值，即self.data;
                     let result = callback(self.data)
                     //如果当前没有抛出异常也可能有两种情况
                     //1.返回的是promise对象
@@ -184,7 +185,8 @@ Promise.prototype.then = function(onResolved,onRejected){
                         //此处还是不太理解，需要进一步研究
                         result.then(resolve,reject)
                     }else{
-                        //进入else说明此时没有抛出异常，返回的结果也不是promise对象，所以之间包装成promise成功的状态即可
+                        //进入else说明此时没有抛出异常，返回的结果也不是promise对象，
+						//所以直接包装成promise成功的状态即可
                         resolve(result)
                     }
 
@@ -219,7 +221,8 @@ Promise.prototype.then = function(onResolved,onRejected){
                //以上两种状态都不符合时，说明当前无状态，即可以往上面的callbacks中添加待执行的回调函数了
                 self.callbacks.push(
                     {
-                        //此处onResolve，onReject的调用场景是当调用resolve或reject时，跟Promise.prototype.then中的形参没有任何关系
+                        //此处onResolve，onReject的调用场景是当调用resolve或reject时，
+						 跟Promise.prototype.then中的形参没有任何关系
                         //说白了，此处改成a,b也可以，只要和上面resolve()或reject()方法里的名字保持一致即可
                         onResolved(value){
                             //此处的函数体内容不可省略，如果省略，当调用时，根本不会有执行，因为函数体为空
@@ -291,7 +294,8 @@ Promise.prototype.catch = function(onRejected){
             //定义一个数组，用于将返回的成功状态的所有value值收集起来返回
             let values = new Array(promises.length)
             promises.forEach((item,index) => {
-                //因为其每一项并不一定都是promise对象，而根据promise.all处理非promise对象是将其值直接返回，所以在此可以将其直接包装成promise对象
+                //因为其每一项并不一定都是promise对象，而根据promise.all处理非promise对象是将其值直接返回，
+				所以在此可以将其直接包装成promise对象
                 Promise.resolve(item).then(
                     value => {
                         num++
@@ -312,7 +316,8 @@ Promise.prototype.catch = function(onRejected){
         
     }
 
-    //返回一个新的promise对象，第一个成功或失败的promise对象的状态和value或reason值即新的promise对象的状态和value或reason值，
+    //返回一个新的promise对象，第一个成功或失败的promise对象的状态和value或reason值
+	即新的promise对象的状态和value或reason值，
     Promise.race = function(promises){
         return new Promise((resolve,reject)=>{
             promises.forEach(item => {
