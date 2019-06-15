@@ -174,20 +174,37 @@ Promise.prototype.then = function(onResolved,onRejected){
 
             //抽出重复代码封装为函数
             function handle(callback){
-                //无论进入then方法的第几个回调函数，其执行结果都可能是成功或失败，其成功或者失败的状态取决于其返回值
+                //无论进入then方法的哪个回调函数，其执行结果都可能是成功或失败，其成功或者失败的状态取决于其返回值
+                /* 
+                注意：为什么调用onResolved()或者onRejected()要判断当前的状态，从而调用相应的resolve()和reject()?
+                    是因为then方法链式调用的原则，当前.then()进入哪个回调函数是取决于调用then的promise对象的状态
+                */
                 try{
                     /* 
-                    根据promise中then方法第一个回调函数的特点，
+                    根据promise中then方法回调函数的特点，
                     可以通过其形参获取调用resolve()调用时传入的value值，即self.data;
                     */
                     let result = callback(self.data)
                     //如果当前没有抛出异常也可能有两种情况
                     //1.返回的是promise对象
                     if(result instanceof Promise){
-                        //此处还是不太理解，需要进一步研究
+                        /* 
+                        此时result是个promise对象，不能够直接得到它的状态，但是可以调用then()方法，
+                        如果是成功的状态，则会进入第一个回调函数，如果是失败的状态则会进入第二个回调函数
+                        总之就是要根据rusult这个promise对象的状态调用相应的成功(resolve())或失败(reject())的方法
+                        
+                        详细写法如下：
+                        result.then(
+                            value => resolve(),//这里面的内容是我们自己定义的，
+                            reason => reject()
+                        )
+                         主要就是要得到resolve()或者reject(),外层函数可以摘掉，所以可以简写为以下形式   
+                         因为result作为一个promise对象总会有一个成功或者失败的状态，可以利用then()方法调用的特点
+                         成功或者失败进入不同的回调函数，从而返回result的状态  
+                        */
                         result.then(resolve,reject)
                     }else{
-                        //进入else说明此时没有抛出异常，返回的结果也不是promise对象，所以之间包装成promise成功的状态即可
+                        //进入else说明此时没有抛出异常，返回的结果也不是promise对象，所以直接包装成promise成功的状态即可
                         resolve(result)
                     }
 
@@ -245,7 +262,7 @@ Promise.prototype.then = function(onResolved,onRejected){
 
 //catch方法实质上是then方法只执行第二个回调函数，其他内容都一样
 Promise.prototype.catch = function(onRejected){
-   return this.then(undefined,onRejected)
+    return this.then(undefined,onRejected)
 }
 ```
 
