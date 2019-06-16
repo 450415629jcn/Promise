@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>面试题</title>
+</head>
+<body>
+    <script>
+        setTimeout(() => {
+            console.log("0")
+        }, 0)
+
+        new Promise((resolve,reject)=>{
+            console.log("1") 
+            resolve()
+        }).then(()=>{        
+            console.log("2")
+            new Promise((resolve,reject)=>{
+            console.log("3")
+            resolve()
+            }).then(()=>{      
+            console.log("4")
+            }).then(()=>{       
+            console.log("5")
+            })
+            /* 
+            本来没有，自己补全的代码，为了方便理解(在执行完resolve()后就会执行该行代码，因为都属于同步代码)
+            而下一个then是在前一个then返回值之后才被放入微队列的，所以分析出何时执行的return至关重要
+            */
+            return undefined;//
+        }).then(()=>{  
+            console.log("6")
+        })
+
+        new Promise((resolve,reject)=>{
+            console.log("7")
+            resolve()
+        }).then(()=>{         
+            console.log("8") 
+        })
+
+        /* 
+        此题执行顺序分析：
+        先执行全局同步代码：1 7
+        再执行微队列代码：2 3 8 4 6 5
+        最后执行宏队列里代码 ：0
+
+        重点分析： 为什么执行顺序是 4 6 5 ？
+        1.先执行1时，会将后面第一个then立刻放进微队列(2 3(是执行then时又放入全局同步代码中的，
+        所以紧跟2之后执行))，第二个then会放入callbacks中，暂时不会放入微队列中待执行
+        2.执行7时，会将后面的then立刻放进微队列中，
+        3.执行完7之后，目前没有全局同步代码，所以开始依次执行微队列中的
+        代码 2 3(不属于微队列，因为只要出现了全局同步代码，会立刻同步执行) 8
+            注意：执行完resolve()后，会立刻将包含4的then放入微队列中，包含5的then放入callbacks中，然后执行return undefined(同步代码，所以会先执行)，
+            所以会立刻将后面包含6的then放入微队列
+        4.此时执行微队列中代码，顺序为 4 6
+        5.执行完4的时候会将包含5的then放入微队列，所以紧跟6之后执行(比6晚一步放入微队列)
+        6.最后所以同步代码和微队列中的代码全部执行完毕，执行宏队列代码 0
+        总体顺序为 1 7 2 3 8 4 6 5 0
+
+        */
+    </script>
+</body>
+</html>
