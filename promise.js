@@ -198,6 +198,8 @@
 
     //catch方法实质上是then方法只执行第二个回调函数，其他内容都一样
     Promise.prototype.catch = function(onRejected){
+      //如果但钱是成功的状态,即self.status ==== 'resolved'那么onRejected不可能被执行,那么无论在里面进行什么操作都是没有用的
+      //而且会执行resolve(self.data),即可以继续链式调用
         return this.then(undefined,onRejected)
     }
 
